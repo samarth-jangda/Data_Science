@@ -6,7 +6,9 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
-import  numpy as np
+import plotly.graph_objects as go
+import numpy as np
+from flask import request
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -33,6 +35,7 @@ y = df["reactive_power"]
 
 
 fig = px.scatter(df, x=x, y=y)
+
 
 fig.update_layout(clickmode='event+select')
 
@@ -80,12 +83,13 @@ app.layout = html.Div([
                     'color':'#ff0000',
 
                 },
+                'hover_data': '',
                 'hovermode':'closest',
                 'title': "A simple chart"
             }
         }
     ),
-    html.Button("Save_Data",id='save-data'),
+    html.Button("Save_Data",id='SaveData'),
 
     html.Div(className='row', children=[
         html.Div([
@@ -121,8 +125,14 @@ app.layout = html.Div([
                 accumulates (or un-accumulates) selected data if you hold down the shift
                 button while clicking.
             """),
+
+
+
             html.Pre(id='selected-data', style=styles['pre']),
         ], className='three columns'),
+
+
+
 
         html.Div([
             dcc.Markdown("""
@@ -135,8 +145,21 @@ app.layout = html.Div([
             """),
             html.Pre(id='relayout-data', style=styles['pre']),
         ], className='three columns')
+
     ])
 ])
+styles_1 = {
+    'pre': {
+        'border': 'thin lightgrey solid',
+        'overflowX': 'scroll',
+    }
+}
+
+second_plot_color={
+    'text' : '#ff0000',
+    'plot_bgcolor':'#990033',
+    'page_bgcolor':'#CC0000'
+}
 
 
 @app.callback(
@@ -159,7 +182,57 @@ def display_click_data(clickData):
     Output('selected-data', 'children'),
     Input('basic-interactions', 'selectedData'))
 def display_selected_data(selectedData):
-    return json.dumps(selectedData, indent=2)
+    result = ""
+    if selectedData is not None:
+        x_1 = list(map(lambda pt: pt.get("x"), selectedData.get("points")))
+        print(x_1)
+        y_1 = list(map(lambda pt: pt.get("y"), selectedData.get("points")))
+        print(y_1)
+
+        df_1=pd.DataFrame(list(zip(x_1,y_1)),
+                          columns=['Active_Power','Reactive_Power'])
+        frames=[df,df_1]
+        result=pd.concat(frames)
+        fig_2=px.scatter(df_1,x=x_1,y=y_1)
+        print(result)
+
+
+        app.layout=html.Div[{
+            dcc.Graph(
+                id='second-interaction',
+                figure=fig_2,
+                style={
+                    'layout':{
+                    'plot_bgcolor': second_plot_color["plot_bgcolor"],
+                    'page_color': second_plot_color["page_bgcolor"],
+                    'font': {
+                        'color': '#FF0000',
+
+                  },
+                    'hover_data': '',
+                    'hovermode': 'closest',
+                    'title': "A simple chart"
+               }
+            }
+
+        ),
+        dcc.Dropdown(
+            id='dropdown-1',
+            options=[
+                {'label': i, 'value': i} for i in x_1
+            ]
+        ),
+        dcc.Dropdown(
+            id='dropdown-1',
+            options=[
+                {'label': i, 'value': i} for i in y_1
+            ]
+        ),
+
+
+    }]
+
+    return selectedData
 
 
 @app.callback(
