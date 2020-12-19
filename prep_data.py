@@ -3,7 +3,7 @@ import json
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -29,7 +29,7 @@ red_button_style={
     'color':'#D3D3D3'
 }
 
-df = pd.read_csv("C:\\Users\\samar\\OneDrive\\Desktop\\Samarth\\Assignment\\sample.csv")
+df = pd.read_csv("C:\\Users\\samar\\OneDrive\\Desktop\\Samarth\\Assignment\\sample.csv", encoding="utf-8")
 x = df["active_power"]
 y = df["reactive_power"]
 
@@ -72,6 +72,11 @@ app.layout = html.Div([
             {'label':i, 'value':i} for i in y
         ]
     ),
+    html.Label("Unlabeled_Data",style={
+        'textAlign': 'center',
+        'display': 'inline-block','margin':'10',
+        'color' : colors['page_bgcolor'],
+    }),
     dcc.Graph(
         id='basic-interactions',
         figure=fig,
@@ -85,11 +90,22 @@ app.layout = html.Div([
                 },
                 'hover_data': '',
                 'hovermode':'closest',
-                'title': "A simple chart"
-            }
+                'title': "A simple chart",
+
+            },
+
         }
     ),
-    html.Button("Save_Data",id='SaveData'),
+
+
+
+    #here user can input the name to labels and also save the data
+    html.Div(dcc.Input(id='input-on-submit',type="text")),
+    html.Button('Submit', id='submit-val', n_clicks=0),
+    html.Div(id='container-basic-button',children='Give the name of label of and press submit'),
+
+    #Here by using this button we can save changes and see a new graph
+    html.Button('Save_Data',id='save-data',n_clicks=0),
 
     html.Div(className='row', children=[
         html.Div([
@@ -144,11 +160,14 @@ app.layout = html.Div([
                 this event.
             """),
             html.Pre(id='relayout-data', style=styles['pre']),
-        ], className='three columns')
+        ], className='three columns'),
 
-    ])
+
+
+    ]),
+
 ])
-styles_1 = {
+styles = {
     'pre': {
         'border': 'thin lightgrey solid',
         'overflowX': 'scroll',
@@ -157,8 +176,8 @@ styles_1 = {
 
 second_plot_color={
     'text' : '#ff0000',
-    'plot_bgcolor':'#990033',
-    'page_bgcolor':'#CC0000'
+    'plot_1bgcolor':'#990033',
+    'page_2bgcolor':'#CC0000'
 }
 
 
@@ -178,61 +197,106 @@ def display_click_data(clickData):
 
 
 
+
+
+@app.callback(
+    Output('container-basic-button','children'),
+    [Input('submit-val','n_clicks')],
+    [State('input-on-submit','value')]
+)
+def update_output(n_clicks,value):
+    return 'The label you have given is of name : {}'.format(
+        value,
+        n_clicks
+    )
+
+
+#here we will finally render our graph with updated value
+
 @app.callback(
     Output('selected-data', 'children'),
-    Input('basic-interactions', 'selectedData'))
-def display_selected_data(selectedData):
+    Input('basic-interactions', 'selectedData'),
+    [State('input-on-submit','value')]
+)
+
+def display_selected_data(selectedData,value):
     result = ""
     if selectedData is not None:
         x_1 = list(map(lambda pt: pt.get("x"), selectedData.get("points")))
-        print(x_1)
+        # print(x_1)
         y_1 = list(map(lambda pt: pt.get("y"), selectedData.get("points")))
-        print(y_1)
+        # print(y_1)
 
-        df_1=pd.DataFrame(list(zip(x_1,y_1)),
-                          columns=['Active_Power','Reactive_Power'])
-        frames=[df,df_1]
-        result=pd.concat(frames)
-        fig_2=px.scatter(df_1,x=x_1,y=y_1)
-        print(result)
+        # sel_df=pd.DataFrame(list(zip(x_1,y_1)),
+        #                   columns=['Active_Power','Reactive_Power'])
+        # frames=[df,df_1]
+        # data_a = pd.concat(frames)
+        # a = 'Given_label - {}'.format(value)
+        # print(a)
 
+        # print(s)
 
-        app.layout=html.Div[{
+        #Take the help of looping to match the data and make a new graph.
+        df["label"] = "unlabeled"
+        for idx in df.index:
+            if df.at[idx, "active_power"] in x_1 and df.at[idx, "reactive_power"] in y_1:
+                df.at[idx, "label"] = value
+        print(df)
+        fig_2 = px.scatter(df,x="active_power",y="reactive_power",color='label')
+        #making the second graph
+
+        app.layout=html.Div([
+
+            html.Label("Labeled_Data", style={
+                'display': 'inline-block', 'margin': '10',
+                'color': '#808000',
+            }),
             dcc.Graph(
                 id='second-interaction',
                 figure=fig_2,
                 style={
-                    'layout':{
-                    'plot_bgcolor': second_plot_color["plot_bgcolor"],
-                    'page_color': second_plot_color["page_bgcolor"],
-                    'font': {
-                        'color': '#FF0000',
+                    'layout': {
+                        'plot_bgcolor': second_plot_color["plot_1bgcolor"],
+                        'page_color': second_plot_color["page_2bgcolor"],
+                        'font': {
+                            'color': '#FFFF00',
 
-                  },
-                    'hover_data': '',
-                    'hovermode': 'closest',
-                    'title': "A simple chart"
-               }
-            }
+                        },
+                        'hover_data': '',
+                        'hovermode': 'closest',
+                        'title': "A simple chart"
+                    }
+                }
 
-        ),
-        dcc.Dropdown(
-            id='dropdown-1',
-            options=[
-                {'label': i, 'value': i} for i in x_1
-            ]
-        ),
-        dcc.Dropdown(
-            id='dropdown-1',
-            options=[
-                {'label': i, 'value': i} for i in y_1
-            ]
-        ),
+            ),
+            html.Label("Selected Active_Power", style={
+                'display': 'inline-block', 'margin': '10',
+                'color': '#808000',
+            }),
+            dcc.Dropdown(
+                id='dropdown-1',
+                options=[
+                    {'label': i, 'value': i} for i in df['active_power']
+                ]
+            ),
+            html.Label("Selected Reactive_Power", style={
+                'display': 'inline-block', 'margin': '10',
+                'color': '#808000',
+            }),
+            dcc.Dropdown(
+                id='dropdown-1',
+                options=[
+                    {'label': i, 'value': i} for i in df["reactive_power"]
+                ]
+            ),
+        ])
+        # df[df["active_power"].isin(x_1) & df["reactive_power"].isin(y_1)]["label"] = value
+        # for idx in df.index:
+        #     if df_1["Active_Power"] in df["active_power"] :
+        #         df.at[3,'Type']= value
+        #         return df
 
-
-    }]
-
-    return selectedData
+    return json.dumps(selectedData, indent=4)
 
 
 @app.callback(
