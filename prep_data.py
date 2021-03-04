@@ -12,83 +12,83 @@ from flask import request
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)  #prepare an app first.
 
-styles = {
+styles = {                                    #give styling to the graph. 
     'pre': {
-        'border': 'thin lightgrey solid',
+        'border': 'thin lightgrey solid',         
         'overflowX': 'scroll',
     }
 }
-colors = {
+colors = {                                  #apply colors to graph and plot background.
     'text' : '#ff0000',
     'plot_bgcolor':'#D3D3D3',
     'page_bgcolor':'#00FFFF'
 }
-red_button_style={
+red_button_style={                    #since it is important to prepare a button and for designing u can give color
     'color':'#D3D3D3'
 }
 
-df = pd.read_csv("C:\\Users\\samar\\OneDrive\\Desktop\\Samarth\\Assignment\\sample.csv", encoding="utf-8")
-x = df["active_power"]
-y = df["reactive_power"]
+df = pd.read_csv("C:\\Users\\samar\\OneDrive\\Desktop\\Samarth\\Assignment\\sample.csv", encoding="utf-8")  #reading the dataset
+x = df["active_power"]                  #the x-axis of the graph which is data in column-1 of sample.cvs file
+y = df["reactive_power"]                #the y-axis of the graph which is data in column-2 of sample.cvs file
 
 
-fig = px.scatter(df, x=x, y=y)
+fig = px.scatter(df, x=x, y=y)        #preparing a scatter plot 
 
 
-fig.update_layout(clickmode='event+select')
+fig.update_layout(clickmode='event+select')        #updating layout on selection of some points.
 
-fig.update_traces(marker_size=6)
+fig.update_traces(marker_size=6)               #updating traces of points along with giving it a size.
 
-app.layout = html.Div([
-    html.H1("Data Science App",
+app.layout = html.Div([                      #here starts the html code as layout of graph
+    html.H1("Data Science App",               #giving heading to data science app
             style={
                 'textAlign': 'center',
                 'color': colors['text']
             }),
-    html.Label("Consider the following graph",
+    html.Label("Consider the following graph",           #Sub-headin of the graph
                style={
                   'textAlign': 'center',
                    'color': '#00FFFF',
                }),
-    html.Label("Below is the data for active power",
+    html.Label("Below is the data for active power",        #Label of the data for column-1
                style={
                    'color': '#FF5733 '
                }),
     dcc.Dropdown(
         id="dropdown",
         options=[
-            {'label':i ,'value':i} for i in x
+            {'label':i ,'value':i} for i in x               # to put the data of column-1 in dropdown
         ]
     ),
-    html.Label("Below is the data for reactive power",
+    html.Label("Below is the data for reactive power",      #label of data of column-2
                style={
                    'color': '#B933FF ',
                }),
     dcc.Dropdown(
         id='dropdown-1',
         options=[
-            {'label':i, 'value':i} for i in y
+            {'label':i, 'value':i} for i in y          #putting data of column-2 in dropdown
         ]
     ),
-    html.Label("Unlabeled_Data",style={
+    html.Label("Unlabeled_Data",style={              #considering all points initially as unlabeled data
         'textAlign': 'center',
         'display': 'inline-block','margin':'10',
         'color' : colors['page_bgcolor'],
     }),
     dcc.Graph(
-        id='basic-interactions',
+        id='basic-interactions',                  #now here preparing graph on web
         figure=fig,
         style={
             'layout':{
-                'plot_bgcolor':colors['plot_bgcolor'],
-                'paper_bgcolor':colors['page_bgcolor'],
+                'plot_bgcolor':colors['plot_bgcolor'],     #backgroung color of plot
+                'paper_bgcolor':colors['page_bgcolor'],    #background color of paper
                 'font':{
                     'color':'#ff0000',
 
                 },
-                'hover_data': '',
+                'hover_data': '',                         #hovering the data for initial phase
                 'hovermode':'closest',
                 'title': "A simple chart",
 
@@ -100,11 +100,13 @@ app.layout = html.Div([
 
 
     #here user can input the name to labels and also save the data
+    
     html.Div(dcc.Input(id='input-on-submit',type="text")),
     html.Button('Submit', id='submit-val', n_clicks=0),
     html.Div(id='container-basic-button',children='Give the name of label of and press submit'),
 
     #Here by using this button we can save changes and see a new graph
+    
     html.Button('Save_Data',id='save-data',n_clicks=0),
 
     html.Div(className='row', children=[
